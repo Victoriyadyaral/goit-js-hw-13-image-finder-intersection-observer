@@ -6,14 +6,24 @@ import notification from './js/notification.js';
 import * as basicLightbox from 'basiclightbox';
 
 const apiService = new ApiService();
+let isLoading = false;
+
+const showLoader = () => {
+  isLoading = true;
+  refs.loader.classList.remove('hide');
+};
+
+const hideLoader = () => {
+  isLoading = false;
+  refs.loader.classList.add('hide');
+};
 refs.loader.classList.add('hide');
 refs.form.addEventListener('submit', handleBtnSubmit);
 
 function handleBtnSubmit(event) {
     event.preventDefault();
-    refs.loader.classList.add('hide');
+    
     apiService.query = event.currentTarget.elements.query.value;
-
     if (apiService.query.trim() === '') {
         return refs.input.classList.add('invalid');
     }
@@ -25,9 +35,11 @@ function handleBtnSubmit(event) {
 
     const ioCallback = (entries) => {
         entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-
-            fetchImages();
+           if (isLoading === false) {
+               if (entry.isIntersecting) {
+                   fetchImages();
+               }
+            }
         })
     };
 
@@ -38,11 +50,11 @@ function handleBtnSubmit(event) {
 };
 
 function fetchImages() {
-    refs.loader.classList.remove('hide');
+    showLoader();
     apiService.fetchImages()
         .then(images => {
             appendImagesMarkup(images);
-            refs.loader.classList.add('hide');
+            hideLoader();
         })
         .catch(() => {
             notification.fetchError();
